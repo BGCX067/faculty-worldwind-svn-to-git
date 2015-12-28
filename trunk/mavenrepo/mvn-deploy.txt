@@ -1,0 +1,4 @@
+mvn deploy:deploy-file -DgroupId=gov.nasa -DartifactId=worldwind -Dversion=0.6.136.11538 -Dpackaging=jar -Dfile=/path/to/file -Durl=[url] -DrepositoryId=[id]
+
+
+mvn deploy:deploy-file -DgroupId=javax.media.opengl -DartifactId=jogl -Dversion=1.1.2-pre-20080523 -Dpackaging=jar -Dfile=D:\Development\tools\worldwind-0.6.136.11538\jogl.jar -Durl=file://D:\Development\wseclipse\faculty-worldwind\mavenrepo -DrepositoryId=faculty-worldwind-repo

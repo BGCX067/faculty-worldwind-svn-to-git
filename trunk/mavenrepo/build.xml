@@ -1,0 +1,95 @@
+<project name="publish-release" default="publish-all" basedir="." xmlns:artifact="antlib:org.apache.maven.artifact.ant">
+
+    <description>
+        build file to install a file into local maven repo
+    </description>
+
+	<!-- set global properties for this build -->
+	<property name="path-to-local-lib" location="D:\\Development\\lib\\" />
+	<property name="path-to-local-maven-repo" location="C:\\Docume~1\\hturksoy\\.m2\\repository\\"/>
+	<property name="pom-file-name" value="worldwind-0.6.136.11538.pom" />
+	<property name="jar-file-name" value="worldwind.jar" />
+	<property name="md5-extension" value=".md5" />
+	<property name="sha1-extension" value=".sha1" />
+		
+	<!-- define maven-ant-tasks -->
+	<path id="maven-ant-tasks.classpath" path="${path-to-local-lib}/mavenanttasks/maven-ant-tasks-2.0.9.jar" />
+	<typedef resource="org/apache/maven/artifact/ant/antlib.xml"
+		uri="antlib:org.apache.maven.artifact.ant" classpathref="maven-ant-tasks.classpath" />
+	
+	<!-- define ant-contrib -->
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties">
+	  <classpath>
+	    <pathelement location="${path-to-local-lib}/antcontrib/ant-contrib-0.6.jar"/>
+	  </classpath>
+	</taskdef>
+
+	<artifact:pom id="worldwind-pom" file="${pom-file-name}" />
+
+	<propertyregex property="pack.name"
+	              input="${worldwind-pom.groupId}"
+	              regexp="\."
+	              replace="\\\"
+	              casesensitive="false" />
+	
+	<property name="path-to-artifact-in-repo" value="${path-to-local-maven-repo}\${pack.name}\${worldwind-pom.artifactId}\${worldwind-pom.version}"/>
+	
+	<target name="publish-all">
+		<antcall target="publish-jar-and-pom-into-maven-repo"></antcall>
+		<antcall target="copy-checksums-into-repo"></antcall>
+	</target>
+
+	<target name="publish-jar-and-pom-into-maven-repo" description="publishes given jar into local maven repo">
+		<artifact:install file="${jar-file-name}">
+			<pom refid="worldwind-pom" />
+		</artifact:install>
+	</target>
+
+	<target name="copy-checksums-into-repo" depends="prepare-checksums-for-pom-and-jar">
+		<echo>copying checksums into ${path-to-artifact-in-repo}</echo>
+		<copy file="${jar-file-name}${md5-extension}" todir="${path-to-artifact-in-repo}" />
+		<copy file="${pom-file-name}${md5-extension}" todir="${path-to-artifact-in-repo}" />
+		<copy file="${jar-file-name}${sha1-extension}" todir="${path-to-artifact-in-repo}" />
+		<copy file="${pom-file-name}${sha1-extension}" todir="${path-to-artifact-in-repo}" />
+	</target>
+
+	<target name="prepare-checksums-for-pom-and-jar">
+		<antcall target="md5-checksums">
+			<param name="filename" value="${jar-file-name}" />
+		</antcall>
+		<antcall target="md5-checksums">
+			<param name="filename" value="${pom-file-name}" />
+		</antcall>
+		<antcall target="sha-checksums">
+			<param name="filename" value="${jar-file-name}" />
+		</antcall>
+		<antcall target="sha-checksums">
+			<param name="filename" value="${pom-file-name}" />
+		</antcall>
+	</target>
+	
+	<target name="md5-checksums">
+		<echo>preparing md5-checksums for ${filename}</echo>
+	    <checksum file="${filename}" forceOverwrite="yes"
+	              fileext="${md5-extension}">
+	    </checksum>
+	</target>
+
+	<target name="sha-checksums">
+		<echo>preparing sha-checksums for ${filename}</echo>
+	    <checksum file="${filename}" forceOverwrite="yes"
+	              algorithm="SHA"
+	              fileext="${sha1-extension}">
+	    </checksum>
+	</target>
+	
+	<target name="verify-checksum">
+		<checksum file="${jar-file-name}" verifyProperty="doesCheckSumMatch" />
+		<fail message="Checksum verification failed for ${jar-file-name}.">
+			<condition>
+				<equals arg1="${doesCheckSumMatch}" arg2="false" />
+			</condition>
+		</fail>
+	</target>
+
+</project>
